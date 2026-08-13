@@ -466,7 +466,7 @@
 <div class="wrap">
 
   <header class="masthead">
-    <p class="eyebrow">Scope Document · v2 · revised 13 Aug 2026</p>
+    <p class="eyebrow">Scope Document · v3 · revised 13 Aug 2026</p>
     <h1>Fantasy Basketball: MVP Scope &amp; 8-Week Plan</h1>
     <p class="standfirst">A single-league head-to-head 9-category fantasy basketball app, live for opening night. Drafting stays on Yahoo; everything after it moves here.</p>
     <div class="meta">
@@ -493,7 +493,12 @@
 
     <div class="callout">
       <span class="tag">Ahead of plan</span>
-      <p>The <strong>scoring engine</strong> and <strong>lineup locking</strong> subsystems are built and tested, pulled forward from weeks 4 and 3 because neither depends on a provider. Two of the three hand-owned subsystems are done before week 1 starts.</p>
+      <p>The <strong>scoring engine</strong> and <strong>lineup locking</strong> subsystems were designed and tested before week 1 began, pulled forward from weeks 4 and 3 because neither depends on a provider.</p>
+    </div>
+
+    <div class="callout warn">
+      <span class="tag">Course correction</span>
+      <p>Both were built by tooling rather than by hand, which defeats the purpose of naming them hand-owned. The scoring engine has been <strong>gutted back to signatures</strong> for reimplementation against its own tests; the reference sits on a stash branch. Standing rule from here: on the three hand-owned subsystems, tooling writes the failing tests and names the edge cases, and the implementation is written by hand.</p>
     </div>
 
     <div>
@@ -689,13 +694,20 @@
         <div class="week-num"><span class="n">00</span><span class="dates">done</span></div>
         <div class="week-body">
           <h3>Foundation and domain core</h3>
-          <p>Completed ahead of schedule. Solution scaffolding, Postgres, React client, OAuth token lifecycle with unattended refresh, and the two hand-owned subsystems that need nothing external: the nine-category scoring engine and per-player lineup locking.</p>
+          <p>Solution scaffolding, Postgres, React client, OAuth token lifecycle with unattended refresh, and the two domain subsystems that need nothing external.</p>
           <div class="exit">
             <span class="tag">Delivered</span>
             <ul>
-              <li>Scoring engine resolving matchups as a pure recompute over stat lines</li>
-              <li>Per-player locking, fantasy-date attribution, position and injured-list eligibility</li>
+              <li>Per-player lineup locking, fantasy-date attribution through the league timezone, position and injured-list eligibility — 27 tests green</li>
+              <li>Scoring engine fully specified by 19 tests; matchup results now name both teams rather than implying orientation from argument order</li>
               <li>Yahoo OAuth token lifecycle, built but unverifiable until access is granted</li>
+            </ul>
+          </div>
+          <div class="exit">
+            <span class="tag">Carried into week 1</span>
+            <ul>
+              <li>Scoring engine implementation, to be written by hand against its red suite</li>
+              <li>A defence round for lineup locking, matching the one the scoring engine went through</li>
             </ul>
           </div>
         </div>
@@ -709,6 +721,7 @@
           <div class="exit">
             <span class="tag">Exit criteria</span>
             <ul>
+              <li>Scoring engine reimplemented by hand; the full suite is green again</li>
               <li>EF Core entities and first migration: players, external ID mapping, stat lines, rosters, lineups, games</li>
               <li>Provider interface defined, with a fixture implementation driving tests offline</li>
               <li>Real payloads recorded from a free tier where available, rather than invented</li>
@@ -728,9 +741,14 @@
             <ul>
               <li>Re-running ingestion over the same day changes nothing</li>
               <li>A corrected stat line updates, and the affected matchup recomputes to the new answer</li>
+              <li>A re-poll window catches corrections landing days after a game, and reconciles them</li>
               <li>Player registry sync populates identity and external ID mapping</li>
               <li>App reachable at a public URL</li>
             </ul>
+          </div>
+          <div class="gate">
+            <span class="tag">Written by hand</span>
+            <p>The correction-reconciliation path is reserved. It is where stored-totals-as-truth and recompute-from-lines actually diverge, and understanding that divergence is the point of owning this subsystem.</p>
           </div>
         </div>
       </div>
