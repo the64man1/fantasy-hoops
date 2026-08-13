@@ -44,21 +44,30 @@ public static class ScoringEngine
 
     /// <summary>
     /// Compares two teams' totals category by category, from <paramref name="team"/>'s perspective.
+    /// The result names both teams, so orientation is never inferred from argument order.
     /// </summary>
     public static MatchupResult Resolve(
-        CategoryTotals team,
-        CategoryTotals opponent,
+        TeamTotals team,
+        TeamTotals opponent,
         IReadOnlyList<StatCategory>? categories = null)
     {
         ArgumentNullException.ThrowIfNull(team);
         ArgumentNullException.ThrowIfNull(opponent);
 
+        if (team.TeamId == opponent.TeamId)
+            throw new ArgumentException("A team cannot play itself.", nameof(opponent));
+
         var scored = categories ?? StatCategories.NineCategory;
 
         return new MatchupResult(
+            team.TeamId,
+            opponent.TeamId,
             scored.ToDictionary(
                 category => category,
-                category => Compare(category, team.ValueOf(category), opponent.ValueOf(category))));
+                category => Compare(
+                    category,
+                    team.Totals.ValueOf(category),
+                    opponent.Totals.ValueOf(category))));
     }
 
     private static CategoryOutcome Compare(StatCategory category, double? mine, double? theirs)

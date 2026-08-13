@@ -5,6 +5,8 @@ namespace FantasyHoops.Domain.Tests.Scoring;
 public class ScoringEngineTests
 {
     private static readonly DateOnly AnyDate = new(2026, 3, 15);
+    private static readonly Guid TeamA = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000001");
+    private static readonly Guid TeamB = Guid.Parse("bbbbbbbb-0000-0000-0000-000000000002");
 
     private static StatLine Line(
         int fgm = 0, int fga = 0, int ftm = 0, int fta = 0, int fg3m = 0,
@@ -15,6 +17,9 @@ public class ScoringEngineTests
         int fgm = 0, int fga = 0, int ftm = 0, int fta = 0, int fg3m = 0,
         int pts = 0, int reb = 0, int ast = 0, int stl = 0, int blk = 0, int tov = 0) =>
         new(fgm, fga, ftm, fta, fg3m, pts, reb, ast, stl, blk, tov);
+
+    private static TeamTotals A(CategoryTotals totals) => new(TeamA, totals);
+    private static TeamTotals B(CategoryTotals totals) => new(TeamB, totals);
 
     // ---------------------------------------------------------------------
     // Aggregation
@@ -100,7 +105,7 @@ public class ScoringEngineTests
     [Fact]
     public void Resolve_HigherWins_ForNormalCategories()
     {
-        var result = ScoringEngine.Resolve(Totals(pts: 500), Totals(pts: 400));
+        var result = ScoringEngine.Resolve(A(Totals(pts: 500)), B(Totals(pts: 400)));
 
         Assert.Equal(CategoryOutcome.Win, result.Categories[StatCategory.Points]);
     }
@@ -109,8 +114,8 @@ public class ScoringEngineTests
     [Fact]
     public void Resolve_LowerWins_ForTurnovers()
     {
-        var fewer = ScoringEngine.Resolve(Totals(tov: 40), Totals(tov: 60));
-        var more = ScoringEngine.Resolve(Totals(tov: 60), Totals(tov: 40));
+        var fewer = ScoringEngine.Resolve(A(Totals(tov: 40)), B(Totals(tov: 60)));
+        var more = ScoringEngine.Resolve(A(Totals(tov: 60)), B(Totals(tov: 40)));
 
         Assert.Equal(CategoryOutcome.Win, fewer.Categories[StatCategory.Turnovers]);
         Assert.Equal(CategoryOutcome.Loss, more.Categories[StatCategory.Turnovers]);
@@ -119,7 +124,7 @@ public class ScoringEngineTests
     [Fact]
     public void Resolve_EqualTotals_Tie()
     {
-        var result = ScoringEngine.Resolve(Totals(reb: 100, tov: 30), Totals(reb: 100, tov: 30));
+        var result = ScoringEngine.Resolve(A(Totals(reb: 100, tov: 30)), B(Totals(reb: 100, tov: 30)));
 
         Assert.Equal(CategoryOutcome.Tie, result.Categories[StatCategory.Rebounds]);
         Assert.Equal(CategoryOutcome.Tie, result.Categories[StatCategory.Turnovers]);
@@ -128,7 +133,7 @@ public class ScoringEngineTests
     [Fact]
     public void Resolve_NeitherTeamAttempted_IsTie()
     {
-        var result = ScoringEngine.Resolve(Totals(fga: 0), Totals(fga: 0));
+        var result = ScoringEngine.Resolve(A(Totals(fga: 0)), B(Totals(fga: 0)));
 
         Assert.Equal(CategoryOutcome.Tie, result.Categories[StatCategory.FieldGoalPercentage]);
     }
@@ -137,8 +142,8 @@ public class ScoringEngineTests
     public void Resolve_NoAttemptsLosesToAnyAttempts_EvenWhenTheOpponentMissedEverything()
     {
         var result = ScoringEngine.Resolve(
-            team: Totals(fgm: 0, fga: 0),
-            opponent: Totals(fgm: 0, fga: 20));
+            A(Totals(fgm: 0, fga: 0)),
+            B(Totals(fgm: 0, fga: 20)));
 
         Assert.Equal(CategoryOutcome.Loss, result.Categories[StatCategory.FieldGoalPercentage]);
     }
@@ -150,7 +155,7 @@ public class ScoringEngineTests
     [Fact]
     public void Resolve_ScoresAllNineCategories()
     {
-        var result = ScoringEngine.Resolve(Totals(), Totals());
+        var result = ScoringEngine.Resolve(A(Totals()), B(Totals()));
 
         Assert.Equal(9, result.Categories.Count);
         Assert.Equal(9, result.Ties);
@@ -159,7 +164,7 @@ public class ScoringEngineTests
     [Fact]
     public void Resolve_EightCategory_OmitsTurnovers()
     {
-        var result = ScoringEngine.Resolve(Totals(), Totals(), StatCategories.EightCategory);
+        var result = ScoringEngine.Resolve(A(Totals()), B(Totals()), StatCategories.EightCategory);
 
         Assert.Equal(8, result.Categories.Count);
         Assert.DoesNotContain(StatCategory.Turnovers, result.Categories.Keys);
@@ -171,24 +176,36 @@ public class ScoringEngineTests
         var team = Totals(fgm: 5, fga: 10, ftm: 8, fta: 10, fg3m: 10, pts: 500, reb: 200, ast: 100, stl: 50, blk: 20, tov: 40);
         var opponent = Totals(fgm: 3, fga: 10, ftm: 9, fta: 10, fg3m: 10, pts: 400, reb: 250, ast: 90, stl: 40, blk: 30, tov: 60);
 
-        var result = ScoringEngine.Resolve(team, opponent);
+        var result = ScoringEngine.Resolve(A(team), B(opponent));
 
-        // Won: FG%, 3PM is tied, PTS, AST, STL, TOV. Lost: FT%, REB, BLK.
+        // Won: FG%, PTS, AST, STL, TOV. Tied: 3PM. Lost: FT%, REB, BLK.
         Assert.Equal(5, result.Wins);
         Assert.Equal(3, result.Losses);
         Assert.Equal(1, result.Ties);
         Assert.Equal(9, result.Wins + result.Losses + result.Ties);
     }
 
-    [Fact]
-    public void Invert_MirrorsEveryOutcome()
-    {
-        var team = Totals(pts: 500, reb: 100, tov: 40);
-        var opponent = Totals(pts: 400, reb: 100, tov: 60);
+    // ---------------------------------------------------------------------
+    // Orientation
+    // ---------------------------------------------------------------------
 
-        var result = ScoringEngine.Resolve(team, opponent);
+    [Fact]
+    public void Resolve_NamesBothTeams()
+    {
+        var result = ScoringEngine.Resolve(A(Totals(pts: 500)), B(Totals(pts: 400)));
+
+        Assert.Equal(TeamA, result.TeamId);
+        Assert.Equal(TeamB, result.OpponentId);
+    }
+
+    [Fact]
+    public void Invert_SwapsTeamsAndMirrorsEveryOutcome()
+    {
+        var result = ScoringEngine.Resolve(A(Totals(pts: 500, reb: 100, tov: 40)), B(Totals(pts: 400, reb: 100, tov: 60)));
         var mirrored = result.Invert();
 
+        Assert.Equal(TeamB, mirrored.TeamId);
+        Assert.Equal(TeamA, mirrored.OpponentId);
         Assert.Equal(result.Wins, mirrored.Losses);
         Assert.Equal(result.Losses, mirrored.Wins);
         Assert.Equal(result.Ties, mirrored.Ties);
@@ -204,10 +221,17 @@ public class ScoringEngineTests
         var team = Totals(fgm: 5, fga: 12, ftm: 8, fta: 9, fg3m: 7, pts: 480, reb: 210, ast: 95, stl: 44, blk: 25, tov: 51);
         var opponent = Totals(fgm: 6, fga: 11, ftm: 7, fta: 12, fg3m: 7, pts: 505, reb: 190, ast: 110, stl: 44, blk: 18, tov: 49);
 
-        var forward = ScoringEngine.Resolve(team, opponent);
-        var backward = ScoringEngine.Resolve(opponent, team);
+        var forward = ScoringEngine.Resolve(A(team), B(opponent));
+        var backward = ScoringEngine.Resolve(B(opponent), A(team));
 
         Assert.Equal(forward.Invert(), backward);
+    }
+
+    [Fact]
+    public void Resolve_RejectsATeamPlayingItself()
+    {
+        Assert.Throws<ArgumentException>(() =>
+            ScoringEngine.Resolve(A(Totals()), A(Totals())));
     }
 
     /// <summary>
@@ -219,8 +243,8 @@ public class ScoringEngineTests
     {
         StatLine[] lines = [Line(fgm: 4, fga: 9, pts: 11, reb: 6), Line(fgm: 2, fga: 8, pts: 5, ast: 7)];
 
-        var first = ScoringEngine.Resolve(ScoringEngine.Aggregate(lines), CategoryTotals.Empty);
-        var second = ScoringEngine.Resolve(ScoringEngine.Aggregate(lines), CategoryTotals.Empty);
+        var first = ScoringEngine.Resolve(A(ScoringEngine.Aggregate(lines)), B(CategoryTotals.Empty));
+        var second = ScoringEngine.Resolve(A(ScoringEngine.Aggregate(lines)), B(CategoryTotals.Empty));
 
         Assert.Equal(first, second);
     }

@@ -8,16 +8,26 @@ public enum CategoryOutcome
 }
 
 /// <summary>
-/// The outcome of one head-to-head matchup, stated from the perspective of a single team.
+/// The outcome of one head-to-head matchup, stated from <paramref name="TeamId"/>'s perspective.
 /// </summary>
-public sealed record MatchupResult(IReadOnlyDictionary<StatCategory, CategoryOutcome> Categories)
+/// <remarks>
+/// The result names the team it describes rather than leaving orientation implicit in argument
+/// order. A caller can assert it is rendering the side it thinks it is; previously that contract
+/// existed only in documentation, and getting it backwards silently inverted the matchup.
+/// </remarks>
+public sealed record MatchupResult(
+    Guid TeamId,
+    Guid OpponentId,
+    IReadOnlyDictionary<StatCategory, CategoryOutcome> Categories)
 {
     public int Wins => Categories.Values.Count(o => o == CategoryOutcome.Win);
     public int Losses => Categories.Values.Count(o => o == CategoryOutcome.Loss);
     public int Ties => Categories.Values.Count(o => o == CategoryOutcome.Tie);
 
-    /// <summary>The result as the opposing team would see it.</summary>
+    /// <summary>The same matchup as the opposing team sees it.</summary>
     public MatchupResult Invert() => new(
+        OpponentId,
+        TeamId,
         Categories.ToDictionary(
             kv => kv.Key,
             kv => kv.Value switch
@@ -35,6 +45,7 @@ public sealed record MatchupResult(IReadOnlyDictionary<StatCategory, CategoryOut
     {
         if (other is null) return false;
         if (ReferenceEquals(this, other)) return true;
+        if (TeamId != other.TeamId || OpponentId != other.OpponentId) return false;
         if (Categories.Count != other.Categories.Count) return false;
 
         foreach (var (category, outcome) in Categories)
@@ -50,6 +61,8 @@ public sealed record MatchupResult(IReadOnlyDictionary<StatCategory, CategoryOut
     {
         // Ordered so hashing does not depend on dictionary enumeration order.
         var hash = new HashCode();
+        hash.Add(TeamId);
+        hash.Add(OpponentId);
         foreach (var (category, outcome) in Categories.OrderBy(kv => kv.Key))
         {
             hash.Add(category);
