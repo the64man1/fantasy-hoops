@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/FantasyHoops.Api/FantasyHoops.Api.csproj" />
+    <Project Path="src/FantasyHoops.Domain/FantasyHoops.Domain.csproj" />
+    <Project Path="src/FantasyHoops.Infrastructure/FantasyHoops.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/FantasyHoops.Domain.Tests/FantasyHoops.Domain.Tests.csproj" />
+  </Folder>
+</Solution>

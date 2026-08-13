@@ -1,0 +1,867 @@
+<title>Fantasy Basketball — MVP Scope &amp; 8-Week Plan</title>
+
+<style>
+  :root {
+    --ground: #F2F3F1;
+    --surface: #FBFBFA;
+    --surface-sunk: #EAECE9;
+    --ink: #16191A;
+    --ink-soft: #5A625F;
+    --ink-faint: #838C88;
+    --rule: #D6DBD7;
+    --rule-strong: #B9C0BB;
+    --accent: #1B4D5C;
+    --accent-wash: #E2EBED;
+    --amber: #8F5A14;
+    --amber-wash: #F2E8D8;
+    --green: #2F6B4F;
+    --green-wash: #E0EBE4;
+
+    --sans: "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    --serif: Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif;
+    --mono: ui-monospace, "Cascadia Mono", "SF Mono", Consolas, "Liberation Mono", monospace;
+
+    --measure: 68ch;
+    --wide: 1080px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #141716;
+      --surface: #1B1F1E;
+      --surface-sunk: #101312;
+      --ink: #E7EBE8;
+      --ink-soft: #9AA39F;
+      --ink-faint: #6E7772;
+      --rule: #2C3231;
+      --rule-strong: #3E4544;
+      --accent: #74B9CB;
+      --accent-wash: #1A2B30;
+      --amber: #D3A15C;
+      --amber-wash: #2B2317;
+      --green: #74BE97;
+      --green-wash: #17251D;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #141716;
+    --surface: #1B1F1E;
+    --surface-sunk: #101312;
+    --ink: #E7EBE8;
+    --ink-soft: #9AA39F;
+    --ink-faint: #6E7772;
+    --rule: #2C3231;
+    --rule-strong: #3E4544;
+    --accent: #74B9CB;
+    --accent-wash: #1A2B30;
+    --amber: #D3A15C;
+    --amber-wash: #2B2317;
+    --green: #74BE97;
+    --green-wash: #17251D;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 17px;
+    line-height: 1.65;
+    margin: 0;
+    padding: 0 24px 96px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: var(--wide);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 56px;
+  }
+
+  .col { max-width: var(--measure); }
+
+  /* ---- masthead ---- */
+
+  .masthead {
+    padding-top: 72px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 32px;
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0;
+  }
+
+  h1 {
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: clamp(34px, 5vw, 52px);
+    line-height: 1.05;
+    letter-spacing: -0.022em;
+    text-wrap: balance;
+    margin: 0;
+    max-width: 20ch;
+  }
+
+  .standfirst {
+    font-size: 19px;
+    color: var(--ink-soft);
+    margin: 0;
+    max-width: 60ch;
+  }
+
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 32px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .meta b {
+    color: var(--ink-faint);
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-right: 8px;
+  }
+
+  /* ---- sections ---- */
+
+  section {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  h2 {
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 25px;
+    letter-spacing: -0.012em;
+    line-height: 1.2;
+    margin: 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--rule-strong);
+    text-wrap: balance;
+  }
+
+  h3 {
+    font-family: var(--sans);
+    font-weight: 650;
+    font-size: 17px;
+    letter-spacing: -0.005em;
+    margin: 0 0 6px;
+  }
+
+  p { margin: 0; max-width: var(--measure); }
+
+  a { color: var(--accent); }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.88em;
+    background: var(--surface-sunk);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 7px; max-width: var(--measure); }
+  li::marker { color: var(--ink-faint); }
+
+  .lede { font-size: 18px; }
+
+  /* ---- callout ---- */
+
+  .callout {
+    background: var(--surface);
+    border-left: 3px solid var(--accent);
+    padding: 18px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: var(--measure);
+  }
+
+  .callout.warn { border-left-color: var(--amber); }
+
+  .callout .tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .callout.warn .tag { color: var(--amber); }
+
+  /* ---- scope columns ---- */
+
+  .scope {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+    gap: 28px;
+  }
+
+  .scope-col {
+    background: var(--surface);
+    border-top: 3px solid var(--rule-strong);
+    padding: 20px 22px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .scope-col.in { border-top-color: var(--green); }
+  .scope-col.out { border-top-color: var(--amber); }
+
+  .scope-col h3 { margin: 0; }
+
+  .scope-col .count {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .scope-col ul { font-size: 15.5px; }
+
+  .why {
+    font-size: 14px;
+    color: var(--ink-soft);
+    font-style: italic;
+  }
+
+  /* ---- table ---- */
+
+  .table-scroll {
+    overflow-x: auto;
+    border: 1px solid var(--rule);
+    background: var(--surface);
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 720px;
+    font-family: var(--sans);
+    font-size: 14.5px;
+  }
+
+  thead th {
+    text-align: left;
+    font-weight: 650;
+    font-size: 11.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--rule-strong);
+    white-space: nowrap;
+  }
+
+  tbody td {
+    padding: 13px 16px;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+    line-height: 1.45;
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+
+  td.name { font-weight: 640; white-space: nowrap; }
+  td.risk { color: var(--ink-soft); }
+
+  .pill {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+
+  .pill.own { background: var(--accent-wash); color: var(--accent); }
+  .pill.mixed { background: var(--surface-sunk); color: var(--ink-soft); }
+  .pill.deleg { background: var(--surface-sunk); color: var(--ink-faint); }
+
+  /* ---- timeline ---- */
+
+  .timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border-top: 1px solid var(--rule);
+  }
+
+  .week {
+    display: grid;
+    grid-template-columns: 96px 1fr;
+    gap: 28px;
+    padding: 22px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .week-num {
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .week-num .n {
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .week-num .dates {
+    font-size: 11px;
+    color: var(--ink-faint);
+    letter-spacing: 0.02em;
+  }
+
+  .week-body { display: flex; flex-direction: column; gap: 10px; }
+
+  .week-body p { font-size: 16px; }
+
+  .exit {
+    background: var(--surface);
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-family: var(--sans);
+    font-size: 14px;
+  }
+
+  .exit .tag {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .exit ul { padding-left: 18px; gap: 4px; max-width: none; }
+
+  .gate {
+    background: var(--accent-wash);
+    border: 1px solid var(--accent);
+    padding: 14px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-family: var(--sans);
+    font-size: 14.5px;
+  }
+
+  .gate .tag {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* ---- cut list ---- */
+
+  .cuts { display: flex; flex-direction: column; gap: 2px; }
+
+  .cut {
+    display: grid;
+    grid-template-columns: 40px 1fr auto;
+    gap: 20px;
+    align-items: baseline;
+    background: var(--surface);
+    padding: 14px 18px;
+    font-family: var(--sans);
+    font-size: 15px;
+  }
+
+  .cut .ord {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--amber);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cut .buys {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cut .cost { display: block; color: var(--ink-soft); font-size: 13.5px; margin-top: 3px; }
+
+  .never {
+    background: var(--green-wash);
+    border-left: 3px solid var(--green);
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: var(--measure);
+  }
+
+  .never .tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--green);
+  }
+
+  .never ul { font-family: var(--sans); font-size: 15px; }
+
+  footer {
+    border-top: 1px solid var(--rule);
+    padding-top: 20px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-faint);
+    line-height: 1.7;
+  }
+
+  @media (max-width: 640px) {
+    body { font-size: 16px; padding: 0 18px 64px; }
+    .week { grid-template-columns: 1fr; gap: 12px; }
+    .week-num { flex-direction: row; align-items: baseline; gap: 10px; }
+    .cut { grid-template-columns: 28px 1fr; }
+    .cut .buys { grid-column: 2; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+
+  a:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">Scope Document · v1</p>
+    <h1>Fantasy Basketball: MVP Scope &amp; 8-Week Plan</h1>
+    <p class="standfirst">A single-league head-to-head 9-category fantasy basketball app, live for opening night. Drafting stays on Yahoo; everything after it moves here.</p>
+    <div class="meta">
+      <span><b>Drafted</b>13 Aug 2026</span>
+      <span><b>Window</b>17 Aug – 11 Oct</span>
+      <span><b>Target</b>2026–27 opening night</span>
+      <span><b>Team</b>1, part-time</span>
+    </div>
+  </header>
+
+  <section class="col">
+    <h2>The bet</h2>
+    <p class="lede">One league of real people plays a full season on this app without touching Yahoo after roster import. That is the whole success condition. Everything in this document either serves it or is deferred.</p>
+    <p>The scope is set by a fixed external deadline rather than a feature list. Tip-off doesn't move, so the plan is built to be cut, not extended — see the ordered cut list at the end.</p>
+    <div class="callout warn">
+      <span class="tag">Reality check</span>
+      <p>Eight weeks part-time is roughly 120–160 hours. That is tight for what follows. The plan assumes you will invoke the cut list at least once; treat that as expected, not as failure.</p>
+    </div>
+  </section>
+
+  <section class="col">
+    <h2>Assumptions</h2>
+    <ul>
+      <li>The draft happens on Yahoo. The commissioner transcribes final rosters once, by hand or CSV.</li>
+      <li>Yahoo's Fantasy Sports API is the source of truth for players, position eligibility, injury status, and box scores.</li>
+      <li>One league. The schema is multi-tenant; there is no league-creation UI.</li>
+      <li>Head-to-head 9-category only. Weekly matchups, Monday–Sunday.</li>
+      <li>Responsive web. No native app.</li>
+    </ul>
+    <div class="callout warn">
+      <span class="tag">Confirm before week 1</span>
+      <p>The 2026–27 NBA season start date. This plan assumes late October, which puts preseason in week 7 and leaves roughly ten days of slack after week 8. If tip-off is earlier than expected, the cut list moves up rather than the schedule compressing.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Scope</h2>
+    <div class="scope">
+      <div class="scope-col in">
+        <div>
+          <h3>Live on day one</h3>
+          <span class="count">10 items · the daily loop</span>
+        </div>
+        <p class="why">Set a lineup, see if you're winning, fix your roster when someone gets hurt. Nothing else is load-bearing.</p>
+        <ul>
+          <li>Player universe sync — names, NBA team, position eligibility, injury status</li>
+          <li>Stat ingestion — nightly box scores, idempotent</li>
+          <li>Daily lineup setting with slot-eligibility validation</li>
+          <li>Per-player lineup locking at tip-off</li>
+          <li>Scoring: H2H 9-cat, category win/loss/tie</li>
+          <li>Season schedule generation and standings</li>
+          <li>Free agency: immediate add/drop</li>
+          <li>Matchup view — your categories vs. your opponent's</li>
+          <li>IL slots</li>
+          <li>Commissioner admin: edit any roster, force any transaction, correct any score</li>
+        </ul>
+      </div>
+      <div class="scope-col out">
+        <div>
+          <h3>Deferred</h3>
+          <span class="count">Safe to ship in-season or never</span>
+        </div>
+        <p class="why">Each of these is either episodic, months away, or replaceable by a commissioner acting manually.</p>
+        <ul>
+          <li><strong>Draft room</strong> — happens on Yahoo</li>
+          <li><strong>Waivers (FAAB or priority)</strong> — replaced by first-come-first-served free agency</li>
+          <li><strong>Trade workflow</strong> — commissioner executes via admin; propose/accept/veto is a real state machine and deserves proper design</li>
+          <li><strong>Playoff bracket</strong> — not needed until March</li>
+          <li><strong>Roto and points formats</strong></li>
+          <li><strong>Keepers and dynasty rules</strong></li>
+          <li><strong>Transaction limits, games-played caps</strong></li>
+          <li><strong>Notifications, message board, player news</strong></li>
+          <li><strong>Projections and advanced stats</strong></li>
+          <li><strong>Native mobile</strong></li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout warn">
+      <span class="tag">Known cost of the waiver cut</span>
+      <p>First-come-first-served free agency produces 3&nbsp;a.m. races over streaming pickups, and your league will complain about it. It is still the right cut — waivers are a whole scheduled-claim subsystem with bid resolution and tiebreaks. This is the obvious v2.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Subsystems</h2>
+    <p class="col">Build stance follows the portfolio logic: hand-own the parts you will be interviewed about, delegate the parts that are plumbing. <span class="pill own">Own</span> means write it yourself and be able to defend every decision cold.</p>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Subsystem</th>
+            <th>Responsibility</th>
+            <th>Stance</th>
+            <th>Primary risk</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="name">Provider gateway</td>
+            <td>OAuth token lifecycle, request throttling, translation from Yahoo's shapes into domain models</td>
+            <td><span class="pill mixed">Mixed</span></td>
+            <td class="risk">Yahoo returns XML by default and deeply nested JSON on request; without an anti-corruption layer their shapes leak everywhere</td>
+          </tr>
+          <tr>
+            <td class="name">Player registry</td>
+            <td>Canonical player records, position eligibility, injury status, team affiliation</td>
+            <td><span class="pill mixed">Mixed</span></td>
+            <td class="risk">Identity drift. Use Yahoo player keys as canonical from day one</td>
+          </tr>
+          <tr>
+            <td class="name">Stat ingestion</td>
+            <td>Nightly box score pull, idempotent upsert, correction reconciliation, backfill</td>
+            <td><span class="pill own">Own</span></td>
+            <td class="risk">NBA stats get revised after the fact; a non-idempotent pipeline silently desyncs</td>
+          </tr>
+          <tr>
+            <td class="name">Roster &amp; lineup</td>
+            <td>Slot assignment, eligibility validation, per-player game-time locking</td>
+            <td><span class="pill own">Own</span></td>
+            <td class="risk">Locking is per-player, not per-day. Richest source of correctness bugs in the app</td>
+          </tr>
+          <tr>
+            <td class="name">Scoring engine</td>
+            <td>Category aggregation over a fantasy week, matchup resolution, win/loss/tie</td>
+            <td><span class="pill own">Own</span></td>
+            <td class="risk">Must be a pure recompute over stored stat lines, never an accumulating tally</td>
+          </tr>
+          <tr>
+            <td class="name">Schedule &amp; standings</td>
+            <td>Round-robin matchup generation, records, tiebreakers</td>
+            <td><span class="pill mixed">Mixed</span></td>
+            <td class="risk">Low. Generate the full season once, up front</td>
+          </tr>
+          <tr>
+            <td class="name">Transactions</td>
+            <td>Add/drop, roster size and legality validation, transaction log</td>
+            <td><span class="pill own">Own</span></td>
+            <td class="risk">Concurrent adds on the same player. Needs real constraints, not application-level checks</td>
+          </tr>
+          <tr>
+            <td class="name">Commissioner admin</td>
+            <td>Override any roster, execute trades, correct scores, import post-draft rosters</td>
+            <td><span class="pill deleg">Delegate</span></td>
+            <td class="risk">Load-bearing despite being unglamorous — it is the escape hatch for everything deferred</td>
+          </tr>
+          <tr>
+            <td class="name">Identity &amp; access</td>
+            <td>Accounts, league membership, authorization</td>
+            <td><span class="pill deleg">Delegate</span></td>
+            <td class="risk">Use a managed provider. Nothing here is differentiating</td>
+          </tr>
+          <tr>
+            <td class="name">Web client</td>
+            <td>Lineup screen, matchup screen, player pool, standings</td>
+            <td><span class="pill deleg">Delegate</span></td>
+            <td class="risk">The matchup screen is the one people stare at daily; give that one real attention</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="col">
+    <h2>The three that must be yours</h2>
+
+    <div>
+      <h3>Lineup locking</h3>
+      <p>A slot locks when that player's game tips, not at a daily cutoff. Layer on fantasy-day boundaries and a 10&nbsp;p.m. ET tip-off that is already tomorrow in UTC, and this becomes the subsystem most likely to produce a silent, expensive, mid-season bug. It is also the one worth twenty minutes of interview conversation.</p>
+    </div>
+
+    <div>
+      <h3>Scoring as pure recompute</h3>
+      <p>The engine should be a pure function from stored stat lines to a matchup result, callable at any time for any week. Store raw box scores; never store an accumulated total as the source of truth. This is what makes stat corrections, rule changes, and your own bugs recoverable instead of catastrophic.</p>
+    </div>
+
+    <div>
+      <h3>Player identity</h3>
+      <p>Rosters are transcribed from a Yahoo draft, so Yahoo's player keys are your join key throughout. Name-matching will fail on suffixes, accents, and two-way call-ups — and it will fail mid-season, when fixing it is expensive.</p>
+    </div>
+
+    <div class="callout">
+      <span class="tag">Architecture note</span>
+      <p>Keep ingestion behind a provider interface. Yahoo is a hard single point of failure for the entire season; <code>nba_api</code> and balldontlie are viable fallbacks. Behind an interface, swapping is a weekend. Without one, it is a rewrite.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Sequencing</h2>
+
+    <div class="timeline">
+
+      <div class="week">
+        <div class="week-num"><span class="n">01</span><span class="dates">Aug 17–23</span></div>
+        <div class="week-body">
+          <h3>Integration spike and foundation</h3>
+          <p>Nothing else starts until Yahoo is proven. Register the app, get a token round-trip working with automatic refresh, and pull one real night of box scores end to end. In parallel: schema, deploy pipeline, CI.</p>
+          <div class="exit">
+            <span class="tag">Exit criteria</span>
+            <ul>
+              <li>OAuth round-trip with unattended token refresh</li>
+              <li>One night of real box scores persisted</li>
+              <li>Skeleton app deployed to a live URL, CI green</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="week">
+        <div class="week-num"><span class="n">02</span><span class="dates">Aug 24–30</span></div>
+        <div class="week-body">
+          <h3>Player registry and ingestion pipeline</h3>
+          <p>Turn the spike into a real pipeline behind the provider interface. Full player universe with eligibility and injury status, syncing on a schedule.</p>
+          <div class="exit">
+            <span class="tag">Exit criteria</span>
+            <ul>
+              <li>Nightly job syncs the full player universe</li>
+              <li>Re-running ingestion over the same night changes nothing</li>
+              <li>Provider interface in place with Yahoo as one implementation</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="week">
+        <div class="week-num"><span class="n">03</span><span class="dates">Aug 31 – Sep 6</span></div>
+        <div class="week-body">
+          <h3>Rosters, lineups, locking</h3>
+          <p>The hardest correctness week. Slot eligibility, then per-player locking verified against a real game night rather than against your own assumptions.</p>
+          <div class="exit">
+            <span class="tag">Exit criteria</span>
+            <ul>
+              <li>A legal lineup can be set; illegal slot assignments are rejected</li>
+              <li>Players lock individually at tip-off, verified against live games</li>
+              <li>Fantasy-day boundaries hold for late tip-offs</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="week">
+        <div class="week-num"><span class="n">04</span><span class="dates">Sep 7–13</span></div>
+        <div class="week-body">
+          <h3>Scoring, matchups, standings</h3>
+          <p>The engine, built as a pure recompute. Generate the full season schedule once and derive standings from resolved matchups.</p>
+          <div class="exit">
+            <span class="tag">Exit criteria</span>
+            <ul>
+              <li>A 9-cat matchup resolves entirely from stored stat lines</li>
+              <li>Any past week can be recomputed on demand and matches</li>
+              <li>Full-season schedule generated; standings update from results</li>
+            </ul>
+          </div>
+          <div class="gate">
+            <span class="tag">Gate · halfway</span>
+            <p>The daily loop should be demoable end to end with seeded data. If it is not, invoke cut list items 1 and 2 now rather than at week 7.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="week">
+        <div class="week-num"><span class="n">05</span><span class="dates">Sep 14–20</span></div>
+        <div class="week-body">
+          <h3>Transactions and commissioner tools</h3>
+          <p>Add/drop with real database constraints against concurrent claims. Commissioner override, and the post-draft roster import you will depend on in week 8.</p>
+          <div class="exit">
+            <span class="tag">Exit criteria</span>
+            <ul>
+              <li>Add/drop enforces roster size and legality under concurrency</li>
+              <li>Commissioner can edit any roster and execute a trade</li>
+              <li>Roster import from CSV works against a realistic file</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="week">
+        <div class="week-num"><span class="n">06</span><span class="dates">Sep 21–27</span></div>
+        <div class="week-body">
+          <h3>The daily-loop interface</h3>
+          <p>Three screens people actually use, on a phone, because that is where lineups get set. Real accounts and league membership replace whatever stub you have been using.</p>
+          <div class="exit">
+            <span class="tag">Exit criteria</span>
+            <ul>
+              <li>Lineup, matchup, and player pool screens usable on mobile</li>
+              <li>Auth and league membership real, not stubbed</li>
+              <li>Someone other than you can set a lineup without instruction</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="week">
+        <div class="week-num"><span class="n">07</span><span class="dates">Sep 28 – Oct 4</span></div>
+        <div class="week-body">
+          <h3>Shadow run and hardening</h3>
+          <p>Preseason games are live. Run the whole pipeline against them unattended and let real data find the bugs your fixtures could not.</p>
+          <div class="exit">
+            <span class="tag">Exit criteria</span>
+            <ul>
+              <li>Five consecutive nights of unattended ingestion with no manual intervention</li>
+              <li>A stat correction reconciles without desync</li>
+              <li>Error alerting reaches you when a job fails</li>
+            </ul>
+          </div>
+          <div class="gate">
+            <span class="tag">Gate · go / no-go</span>
+            <p>If the shadow run is not green, week 8 becomes hardening and the league starts on nightly-only scoring with a manual commissioner backstop. Do not start a season on an unproven pipeline.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="week">
+        <div class="week-num"><span class="n">08</span><span class="dates">Oct 5–11</span></div>
+        <div class="week-body">
+          <h3>Onboarding and buffer</h3>
+          <p>Deliberately underloaded. This week absorbs slippage from any of the previous seven, and it is the only reason the plan survives contact.</p>
+          <div class="exit">
+            <span class="tag">Exit criteria</span>
+            <ul>
+              <li>Real post-draft rosters imported and verified</li>
+              <li>League members invited and signed in</li>
+              <li>README and architecture doc written while decisions are fresh</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <h2>Cut list</h2>
+    <p class="col">Invoke in this order. Each entry is pre-decided so that a bad week costs you a feature, not a weekend of deliberation about which feature.</p>
+    <div class="cuts">
+      <div class="cut">
+        <span class="ord">1</span>
+        <span>In-game stat polling → nightly ingestion only
+          <span class="cost">Scores refresh the next morning instead of live. The single biggest saving available.</span>
+        </span>
+        <span class="buys">≈ 4–5 days</span>
+      </div>
+      <div class="cut">
+        <span class="ord">2</span>
+        <span>IL slots
+          <span class="cost">Injured players occupy active roster spots. Annoying in basketball, survivable for one season.</span>
+        </span>
+        <span class="buys">≈ 2 days</span>
+      </div>
+      <div class="cut">
+        <span class="ord">3</span>
+        <span>Commissioner UI → seed scripts and direct database access
+          <span class="cost">You do it by hand. Only you are affected, which is what makes this cheap.</span>
+        </span>
+        <span class="buys">≈ 3 days</span>
+      </div>
+      <div class="cut">
+        <span class="ord">4</span>
+        <span>Player pool filtering and sorting → name search only
+          <span class="cost">Finding a streamer gets tedious. Pure UX cost, no correctness risk.</span>
+        </span>
+        <span class="buys">≈ 2 days</span>
+      </div>
+      <div class="cut">
+        <span class="ord">5</span>
+        <span>Standings tiebreakers → arbitrary but stable ordering
+          <span class="cost">Matters only near playoff seeding, which is months away.</span>
+        </span>
+        <span class="buys">≈ 1 day</span>
+      </div>
+    </div>
+
+    <div class="never">
+      <span class="tag">Never cut</span>
+      <ul>
+        <li>Per-player game-time locking</li>
+        <li>Idempotent ingestion</li>
+        <li>Scoring as a pure recompute over stored stat lines</li>
+        <li>Yahoo player keys as canonical identity</li>
+      </ul>
+      <p class="why">These four are either unrecoverable mid-season or the reason the project is worth building. Cut features around them.</p>
+    </div>
+  </section>
+
+  <section class="col">
+    <h2>Open questions</h2>
+    <ul>
+      <li>Confirmed 2026–27 season start date, and whether preseason games appear in Yahoo's stat feed at all — week 7 depends on it.</li>
+      <li>Yahoo's actual rate limits and access token TTL. Published sources disagree; measure it in week 1.</li>
+      <li>League size and roster configuration — drives schedule generation and slot validation.</li>
+      <li>Whether the commissioner is you. If not, the admin tooling needs to be usable by someone else, which moves it off the cut list.</li>
+    </ul>
+  </section>
+
+  <footer>
+    Scope document v1 · drafted 13 August 2026 · revise at each gate rather than continuously
+  </footer>
+
+</div>
