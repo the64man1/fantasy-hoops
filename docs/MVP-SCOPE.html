@@ -466,7 +466,7 @@
 <div class="wrap">
 
   <header class="masthead">
-    <p class="eyebrow">Scope Document · v1</p>
+    <p class="eyebrow">Scope Document · v2 · revised 13 Aug 2026</p>
     <h1>Fantasy Basketball: MVP Scope &amp; 8-Week Plan</h1>
     <p class="standfirst">A single-league head-to-head 9-category fantasy basketball app, live for opening night. Drafting stays on Yahoo; everything after it moves here.</p>
     <div class="meta">
@@ -476,6 +476,32 @@
       <span><b>Team</b>1, part-time</span>
     </div>
   </header>
+
+  <section class="col">
+    <h2>Status</h2>
+    <p class="lede">Revised 13 August 2026, before week 1 began. Two assumptions in the original plan broke, and two subsystems came in early.</p>
+
+    <div class="callout warn">
+      <span class="tag">Assumption broken</span>
+      <p><strong>Yahoo Fantasy API access is no longer self-serve.</strong> It now requires an application reviewed by Yahoo, with no published turnaround. The stat source of truth is therefore unresolved, and cannot be resolved by working harder. An application is in; the plan no longer waits on it.</p>
+    </div>
+
+    <div class="callout warn">
+      <span class="tag">Assumption broken</span>
+      <p><strong>Local Postgres runs on port 5433, not 5432.</strong> A pre-existing native PostgreSQL service already holds 5432 on the development machine, and Docker silently lost the port race. Anything connecting locally needs the corrected port.</p>
+    </div>
+
+    <div class="callout">
+      <span class="tag">Ahead of plan</span>
+      <p>The <strong>scoring engine</strong> and <strong>lineup locking</strong> subsystems are built and tested, pulled forward from weeks 4 and 3 because neither depends on a provider. Two of the three hand-owned subsystems are done before week 1 starts.</p>
+    </div>
+
+    <div>
+      <h3>The provider strategy that replaced waiting</h3>
+      <p>Development runs against recorded fixtures behind a provider interface, so the choice of stat source is deferred to week 6 rather than blocking week 1. Response schemas are published in vendor documentation, so fixtures can be built without paying for or being granted access to anything. The decision costs a two-day adapter whenever it lands, and there is no accumulated season data to migrate while the league has not started.</p>
+    </div>
+  </section>
+
 
   <section class="col">
     <h2>The bet</h2>
@@ -655,20 +681,38 @@
 
   <section>
     <h2>Sequencing</h2>
+    <p class="col">Revised. The original week 1 assumed a Yahoo integration spike could close; it cannot. Domain work that needs no provider moved earlier, and the provider decision moved to week 6.</p>
 
     <div class="timeline">
 
       <div class="week">
+        <div class="week-num"><span class="n">00</span><span class="dates">done</span></div>
+        <div class="week-body">
+          <h3>Foundation and domain core</h3>
+          <p>Completed ahead of schedule. Solution scaffolding, Postgres, React client, OAuth token lifecycle with unattended refresh, and the two hand-owned subsystems that need nothing external: the nine-category scoring engine and per-player lineup locking.</p>
+          <div class="exit">
+            <span class="tag">Delivered</span>
+            <ul>
+              <li>Scoring engine resolving matchups as a pure recompute over stat lines</li>
+              <li>Per-player locking, fantasy-date attribution, position and injured-list eligibility</li>
+              <li>Yahoo OAuth token lifecycle, built but unverifiable until access is granted</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="week">
         <div class="week-num"><span class="n">01</span><span class="dates">Aug 17–23</span></div>
         <div class="week-body">
-          <h3>Integration spike and foundation</h3>
-          <p>Nothing else starts until Yahoo is proven. Register the app, get a token round-trip working with automatic refresh, and pull one real night of box scores end to end. In parallel: schema, deploy pipeline, CI.</p>
+          <h3>Persistence and the provider seam</h3>
+          <p>Give the domain somewhere to live, and put the interface in place that makes the provider decision cheap later. Identity is modelled as ours from the start, with external IDs mapped alongside rather than used as keys.</p>
           <div class="exit">
             <span class="tag">Exit criteria</span>
             <ul>
-              <li>OAuth round-trip with unattended token refresh</li>
-              <li>One night of real box scores persisted</li>
-              <li>Skeleton app deployed to a live URL, CI green</li>
+              <li>EF Core entities and first migration: players, external ID mapping, stat lines, rosters, lineups, games</li>
+              <li>Provider interface defined, with a fixture implementation driving tests offline</li>
+              <li>Real payloads recorded from a free tier where available, rather than invented</li>
+              <li>CI runs the test suite on every push</li>
             </ul>
           </div>
         </div>
@@ -677,14 +721,15 @@
       <div class="week">
         <div class="week-num"><span class="n">02</span><span class="dates">Aug 24–30</span></div>
         <div class="week-body">
-          <h3>Player registry and ingestion pipeline</h3>
-          <p>Turn the spike into a real pipeline behind the provider interface. Full player universe with eligibility and injury status, syncing on a schedule.</p>
+          <h3>Ingestion pipeline</h3>
+          <p>The pipeline is built against fixtures, so it is complete and tested before a real provider exists. Also the week deployment stops being deferred.</p>
           <div class="exit">
             <span class="tag">Exit criteria</span>
             <ul>
-              <li>Nightly job syncs the full player universe</li>
-              <li>Re-running ingestion over the same night changes nothing</li>
-              <li>Provider interface in place with Yahoo as one implementation</li>
+              <li>Re-running ingestion over the same day changes nothing</li>
+              <li>A corrected stat line updates, and the affected matchup recomputes to the new answer</li>
+              <li>Player registry sync populates identity and external ID mapping</li>
+              <li>App reachable at a public URL</li>
             </ul>
           </div>
         </div>
@@ -693,14 +738,14 @@
       <div class="week">
         <div class="week-num"><span class="n">03</span><span class="dates">Aug 31 – Sep 6</span></div>
         <div class="week-body">
-          <h3>Rosters, lineups, locking</h3>
-          <p>The hardest correctness week. Slot eligibility, then per-player locking verified against a real game night rather than against your own assumptions.</p>
+          <h3>Matchups, schedule, standings</h3>
+          <p>Wire the finished scoring engine to persisted lineups and stat lines. Generate the season once, up front.</p>
           <div class="exit">
             <span class="tag">Exit criteria</span>
             <ul>
-              <li>A legal lineup can be set; illegal slot assignments are rejected</li>
-              <li>Players lock individually at tip-off, verified against live games</li>
-              <li>Fantasy-day boundaries hold for late tip-offs</li>
+              <li>Full-season round-robin schedule generated</li>
+              <li>A week resolves end to end from stored data</li>
+              <li>Any past week recomputes to the same result</li>
             </ul>
           </div>
         </div>
@@ -709,19 +754,19 @@
       <div class="week">
         <div class="week-num"><span class="n">04</span><span class="dates">Sep 7–13</span></div>
         <div class="week-body">
-          <h3>Scoring, matchups, standings</h3>
-          <p>The engine, built as a pure recompute. Generate the full season schedule once and derive standings from resolved matchups.</p>
+          <h3>Transactions and commissioner tools</h3>
+          <p>Add/drop enforced by database constraints rather than application checks, and the commissioner escape hatch that everything deferred depends on.</p>
           <div class="exit">
             <span class="tag">Exit criteria</span>
             <ul>
-              <li>A 9-cat matchup resolves entirely from stored stat lines</li>
-              <li>Any past week can be recomputed on demand and matches</li>
-              <li>Full-season schedule generated; standings update from results</li>
+              <li>Concurrent adds of the same player impossible at the database level</li>
+              <li>Commissioner can edit any roster and execute a trade</li>
+              <li>Roster import works against a realistic CSV</li>
             </ul>
           </div>
           <div class="gate">
             <span class="tag">Gate · halfway</span>
-            <p>The daily loop should be demoable end to end with seeded data. If it is not, invoke cut list items 1 and 2 now rather than at week 7.</p>
+            <p>The daily loop should be demoable end to end on seeded data. If it is not, invoke cut list items 1 and 2 now rather than at week 7.</p>
           </div>
         </div>
       </div>
@@ -729,14 +774,13 @@
       <div class="week">
         <div class="week-num"><span class="n">05</span><span class="dates">Sep 14–20</span></div>
         <div class="week-body">
-          <h3>Transactions and commissioner tools</h3>
-          <p>Add/drop with real database constraints against concurrent claims. Commissioner override, and the post-draft roster import you will depend on in week 8.</p>
+          <h3>API surface and access</h3>
+          <p>Every screen the client needs, behind real accounts rather than a stub.</p>
           <div class="exit">
             <span class="tag">Exit criteria</span>
             <ul>
-              <li>Add/drop enforces roster size and legality under concurrency</li>
-              <li>Commissioner can edit any roster and execute a trade</li>
-              <li>Roster import from CSV works against a realistic file</li>
+              <li>Endpoints for setting a lineup, viewing a matchup, browsing the player pool, and standings</li>
+              <li>Auth and league membership real, not stubbed</li>
             </ul>
           </div>
         </div>
@@ -745,15 +789,18 @@
       <div class="week">
         <div class="week-num"><span class="n">06</span><span class="dates">Sep 21–27</span></div>
         <div class="week-body">
-          <h3>The daily-loop interface</h3>
-          <p>Three screens people actually use, on a phone, because that is where lineups get set. Real accounts and league membership replace whatever stub you have been using.</p>
+          <h3>Web client</h3>
+          <p>Three screens people actually use, on a phone, because that is where lineups get set.</p>
           <div class="exit">
             <span class="tag">Exit criteria</span>
             <ul>
               <li>Lineup, matchup, and player pool screens usable on mobile</li>
-              <li>Auth and league membership real, not stubbed</li>
               <li>Someone other than you can set a lineup without instruction</li>
             </ul>
+          </div>
+          <div class="gate">
+            <span class="tag">Gate · provider decision</span>
+            <p>Decide the stat source here and do not defer again. Either Yahoo has approved access, or commit to a paid tier elsewhere. Week 7 cannot start without a real provider, and this is the last point where a two-day adapter still fits.</p>
           </div>
         </div>
       </div>
@@ -761,13 +808,13 @@
       <div class="week">
         <div class="week-num"><span class="n">07</span><span class="dates">Sep 28 – Oct 4</span></div>
         <div class="week-body">
-          <h3>Shadow run and hardening</h3>
-          <p>Preseason games are live. Run the whole pipeline against them unattended and let real data find the bugs your fixtures could not.</p>
+          <h3>Real provider and shadow run</h3>
+          <p>Implement the chosen provider behind the existing interface, then run the whole pipeline against live preseason games and let real data find what fixtures could not.</p>
           <div class="exit">
             <span class="tag">Exit criteria</span>
             <ul>
               <li>Five consecutive nights of unattended ingestion with no manual intervention</li>
-              <li>A stat correction reconciles without desync</li>
+              <li>A real stat correction reconciles without desync</li>
               <li>Error alerting reaches you when a job fails</li>
             </ul>
           </div>
@@ -853,10 +900,12 @@
   <section class="col">
     <h2>Open questions</h2>
     <ul>
-      <li>Confirmed 2026–27 season start date, and whether preseason games appear in Yahoo's stat feed at all — week 7 depends on it.</li>
-      <li>Yahoo's actual rate limits and access token TTL. Published sources disagree; measure it in week 1.</li>
-      <li>League size and roster configuration — drives schedule generation and slot validation.</li>
-      <li>Whether the commissioner is you. If not, the admin tooling needs to be usable by someone else, which moves it off the cut list.</li>
+      <li><strong>Whether Yahoo approves API access, and when.</strong> The one question that cannot be answered by working on it. Resolved by the week 6 gate one way or the other; if it is still open then, the answer is no and the paid alternative is committed to.</li>
+      <li><strong>Confirmed 2026–27 season start date</strong>, and whether preseason games appear in whichever stat feed is chosen. Week 7's shadow run assumes both.</li>
+      <li><strong>League size and roster configuration.</strong> The domain currently assumes a conventional ten active, three bench, three injured list. Drives schedule generation and slot validation, so worth settling before week 3.</li>
+      <li><strong>Yahoo's real access token lifetime.</strong> Published sources disagree between minutes and an hour. The refresh logic handles either, but the value is unmeasurable until access is granted.</li>
+      <li><strong>Percentage categories with no attempts.</strong> The engine ranks a team that never shot below one that did, and ties two that both never shot. Unverified against Yahoo's actual behaviour; isolated in one place and only reachable if a team fields nobody for a full period.</li>
+      <li><strong>Whether the commissioner is you.</strong> If not, the admin tooling needs to be usable by someone else, which moves it off the cut list.</li>
     </ul>
   </section>
 
