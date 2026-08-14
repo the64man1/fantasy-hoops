@@ -129,6 +129,24 @@ public class LineupValidatorTests
         Assert.True(result.IsValid);
     }
 
+    /// <summary>
+    /// The case that shows shape validity decaying without anyone editing anything: a player parked
+    /// on the injured list is upgraded to healthy overnight, and a lineup that was legal yesterday
+    /// is not legal today. Nothing changed in the submission — the facts underneath it moved. This
+    /// is why shape has to be answerable with no proposed change in hand.
+    /// </summary>
+    [Fact]
+    public void Shape_RejectsAHealthyPlayerStillOccupyingAnInjuredListSlot()
+    {
+        var id = Guid.NewGuid();
+        var lineup = new Lineup(March15, [new SlotAssignment(id, RosterSlot.InjuredList)]);
+
+        var result = LineupValidator.ValidateShape(
+            lineup, Roster(Player(id, status: InjuryStatus.Healthy)), RosterConfiguration.Standard);
+
+        Assert.True(result.HasKind(LineupViolationKind.InjuredListIneligible));
+    }
+
     [Fact]
     public void Shape_RejectsPlayerNotOnRoster()
     {
@@ -137,6 +155,73 @@ public class LineupValidatorTests
         var result = LineupValidator.ValidateShape(lineup, Roster(), RosterConfiguration.Standard);
 
         Assert.True(result.HasKind(LineupViolationKind.UnknownPlayer));
+    }
+
+    /// <summary>
+    /// A submission describes the whole desired lineup, so a rostered player who appears nowhere in
+    /// it is a malformed submission rather than an edit. Left unchecked it is also the omission
+    /// cheat: a manager whose player has already tipped off simply leaves him out of the payload
+    /// instead of benching him, and the stat line stops counting.
+    /// </summary>
+    [Fact]
+    public void Shape_RejectsALineupThatOmitsARosteredPlayer()
+    {
+        var assigned = Guid.NewGuid();
+        var omitted = Guid.NewGuid();
+
+        var lineup = new Lineup(March15, [new SlotAssignment(assigned, RosterSlot.PointGuard)]);
+
+        var result = LineupValidator.ValidateShape(
+            lineup, Roster(Player(assigned), Player(omitted)), RosterConfiguration.Standard);
+
+        Assert.True(result.HasKind(LineupViolationKind.RosteredPlayerUnassigned));
+    }
+
+    /// <summary>
+    /// The caller has to be able to say <em>who</em> was left out, so every omitted player is
+    /// reported individually rather than collapsed into one "incomplete lineup" violation.
+    /// </summary>
+    [Fact]
+    public void Shape_NamesEveryUnassignedRosteredPlayer()
+    {
+        var assigned = Guid.NewGuid();
+        var firstOmitted = Guid.NewGuid();
+        var secondOmitted = Guid.NewGuid();
+
+        var lineup = new Lineup(March15, [new SlotAssignment(assigned, RosterSlot.PointGuard)]);
+
+        var result = LineupValidator.ValidateShape(
+            lineup,
+            Roster(Player(assigned), Player(firstOmitted), Player(secondOmitted)),
+            RosterConfiguration.Standard);
+
+        var reported = result.Violations
+            .Where(v => v.Kind == LineupViolationKind.RosteredPlayerUnassigned)
+            .Select(v => v.PlayerId)
+            .ToList();
+
+        Assert.Equal(2, reported.Count);
+        Assert.Contains(firstOmitted, reported);
+        Assert.Contains(secondOmitted, reported);
+    }
+
+    /// <summary>Guards the rule against over-firing: a lineup covering the whole roster is legal.</summary>
+    [Fact]
+    public void Shape_AcceptsALineupCoveringEveryRosteredPlayer()
+    {
+        var starter = Guid.NewGuid();
+        var benched = Guid.NewGuid();
+
+        var lineup = new Lineup(March15,
+        [
+            new SlotAssignment(starter, RosterSlot.PointGuard),
+            new SlotAssignment(benched, RosterSlot.Bench),
+        ]);
+
+        var result = LineupValidator.ValidateShape(
+            lineup, Roster(Player(starter), Player(benched)), RosterConfiguration.Standard);
+
+        Assert.True(result.IsValid);
     }
 
     // -----------------------------------------------------------------

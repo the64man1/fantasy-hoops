@@ -24,6 +24,18 @@ public static class InjuryStatuses
     /// Deliberately excludes <see cref="InjuryStatus.Out"/>. Being ruled out of tonight's game is
     /// not the same as carrying a long-term designation, and letting day-to-day absences occupy
     /// injured list slots would turn them into extra bench spots.
+    /// <para>
+    /// The competitive effect is the reason this is not a preference. Admitting <c>Out</c> lets a
+    /// manager wait for the designation to drop, park the player, stream a body into the vacated
+    /// active slot, and un-park him two days later — free roster expansion for whoever checks their
+    /// phone at 6pm, and a standing bonus to rest-prone veterans. Changing it is a rules change the
+    /// league has to be told about, not a settings toggle.
+    /// </para>
+    /// <para>
+    /// This rule is only as good as the status mapping feeding it. Providers frequently collapse
+    /// "out tonight" and "out for the season" into one value; verify what the chosen provider
+    /// actually distinguishes before trusting <see cref="InjuryStatus.Out"/> to mean what it says.
+    /// </para>
     /// </remarks>
     public static bool QualifiesForInjuredList(this InjuryStatus status) =>
         status is InjuryStatus.InjuredList or InjuryStatus.NotActive;

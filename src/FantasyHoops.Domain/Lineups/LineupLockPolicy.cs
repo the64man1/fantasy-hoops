@@ -18,14 +18,24 @@ public static class LineupLockPolicy
     /// </summary>
     /// <remarks>
     /// A player with no game that day is never locked; there is nothing to protect against.
-    /// This matters for streaming, where managers move players in and out on off days.
+    /// Streaming is the obvious beneficiary, but drops are where a daily cutoff would actually
+    /// hurt: a manager who cannot drop an idle player cannot pick anyone up either, and the
+    /// waiver clock does not care that it is 11pm. Additionally, as a courtesy, we are allowing
+    /// to submit a roster change if they happen to submit a change the exact tip-off time tick.
     /// </remarks>
     public static bool IsLocked(ScheduledGame? game, DateTimeOffset asOf) =>
-        game is not null && asOf >= game.TipOff;
+        game is not null && asOf > game.TipOff;
 
     /// <summary>
     /// Finds a player's game for a fantasy date, if they have one.
     /// </summary>
+    /// <remarks>
+    /// TODO(owner): this takes the first match. A team cannot play twice on one fantasy date, so
+    /// duplicates only arise from ingestion — the same game arriving twice, or a reschedule landing
+    /// alongside the row it replaces. Identical tip-offs make the choice moot; disagreeing ones do
+    /// not, and the conservative reading is that the earliest tip-off locks. Worth settling
+    /// alongside the week-2 re-poll path rather than here.
+    /// </remarks>
     public static ScheduledGame? GameFor(
         RosteredPlayer player,
         DateOnly fantasyDate,

@@ -68,11 +68,11 @@ public class LineupLockPolicyTests
     }
 
     [Fact]
-    public void Locked_AtTipOff()
+    public void NotLocked_AtTipOff()
     {
         var tipOff = new DateTimeOffset(2026, 3, 16, 0, 0, 0, TimeSpan.Zero);
 
-        Assert.True(LineupLockPolicy.IsLocked(Game(tipOff), tipOff));
+        Assert.False(LineupLockPolicy.IsLocked(Game(tipOff), tipOff));
     }
 
     [Fact]

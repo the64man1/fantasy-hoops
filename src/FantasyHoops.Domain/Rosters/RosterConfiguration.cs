@@ -20,6 +20,12 @@ public sealed record RosterConfiguration(IReadOnlyDictionary<RosterSlot, int> Sl
         [RosterSlot.InjuredList] = 3,
     });
 
+    // TODO(owner): a slot absent from SlotCounts silently reports capacity 0 rather than erroring.
+    // Harmless while Standard is the only configuration. The moment roster shape is commissioner-
+    // editable it is a live bug: a config that simply omits Bench turns every bench assignment into
+    // an overfill violation, and the manager is shown a nonsense error about a slot they never
+    // touched. Two ways out — validate configurations on save so an incomplete one cannot be
+    // stored, or make a missing slot explicit here. Owner's call; the first keeps this method total.
     public int Capacity(RosterSlot slot) => SlotCounts.GetValueOrDefault(slot);
 
     public int ActiveCount => SlotCounts.Where(kv => kv.Key.IsActive()).Sum(kv => kv.Value);

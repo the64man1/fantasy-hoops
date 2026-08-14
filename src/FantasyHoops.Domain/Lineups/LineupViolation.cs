@@ -14,6 +14,8 @@ public enum LineupViolationKind
     InjuredListIneligible,
     /// <summary>The player is unknown to the roster.</summary>
     UnknownPlayer,
+    /// <summary>A player on the roster was given no slot at all by the submission.</summary>
+    RosteredPlayerUnassigned,
     /// <summary>The player's game has started, so their slot can no longer change.</summary>
     PlayerLocked,
 }

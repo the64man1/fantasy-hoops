@@ -4,10 +4,25 @@ namespace FantasyHoops.Domain.Lineups;
 
 /// <summary>
 /// Validates lineups in two independent passes: whether the lineup is well formed at all, and
-/// whether a change to it is still permitted given which games have started. They are kept apart
-/// because a lineup can be perfectly legal in shape yet illegal to submit, and the distinction
-/// matters to anything reporting why a change was rejected.
+/// whether a change to it is still permitted given which games have started.
 /// </summary>
+/// <remarks>
+/// They are kept apart because they are not two flavours of one question. Shape validity is a
+/// predicate on a single lineup; change validity is a predicate on a pair of them. Different
+/// arity, and therefore different inputs: shape needs a lineup, a roster and a configuration,
+/// while change additionally needs a schedule and a clock. Merging them would force every caller
+/// who only wants to know whether an arrangement is legal to manufacture a schedule and a current
+/// time in order to ask — and callers with no previous state to diff against (auto-draft output,
+/// a seeded lineup, an import, a migration backfill) would have to invent one.
+/// <para>
+/// Both directions occur. A lineup can be flawless in shape and rejected purely because a player
+/// has tipped off — nothing is wrong with it, it is simply too late. Less obviously, a stored
+/// lineup can become shape-invalid with nobody touching it: a player parked on the injured list
+/// is upgraded to healthy overnight and the arrangement that was legal yesterday no longer is.
+/// Shape validity decays on its own, because it depends on facts about players that move
+/// underneath it, which is why it has to be answerable with no proposed change in sight.
+/// </para>
+/// </remarks>
 public static class LineupValidator
 {
     /// <summary>
@@ -43,6 +58,25 @@ public static class LineupValidator
                 LineupViolationKind.SlotOverfilled,
                 $"{overfilled.Count()} players assigned to {overfilled.Key}, which holds {configuration.Capacity(overfilled.Key)}.",
                 Slot: overfilled.Key));
+        }
+
+        // Rule catches players in the lineup but not on the roster; this one catches players
+        // on the roster that the submission gave no slot. Emit RosteredPlayerUnassigned, carrying
+        // the PlayerId so the caller can name who was dropped.
+        //
+        // Closes the omission cheat: a locked player left out of the payload entirely rather than
+        // benched. ValidateChange already rejects that on the lock rule (a slot change of
+        // something-to-nothing); this is the independent guard at the well-formedness layer, so a
+        // malformed submission is refused before locking is even consulted.
+        foreach (var player in roster.Values)
+        {
+            if (!lineup.PlayerIds.Contains(player.PlayerId))
+            {
+                violations.Add(new LineupViolation(
+                    LineupViolationKind.RosteredPlayerUnassigned,
+                    "Rostered player is not assigned to any slot.",
+                    player.PlayerId));
+            }
         }
 
         foreach (var assignment in lineup.Assignments)
@@ -89,6 +123,12 @@ public static class LineupValidator
     /// them between slots, adding them to a lineup they were absent from, and removing them
     /// entirely. Only checking "moved" would leave the other two as ways to retroactively edit a
     /// player whose game is underway.
+    /// <para>
+    /// What makes that airtight is the range rather than the rule: "changed" is evaluated over the
+    /// <em>union</em> of both lineups, with absence treated as a legitimate slot value rather than
+    /// a gap to skip. Iterating the intersection instead would check precisely the case a cheating
+    /// manager will not use — he does not move the player who just went 0-for-6, he omits him.
+    /// </para>
     /// </remarks>
     public static LineupValidationResult ValidateChange(
         Lineup current,
