@@ -298,6 +298,8 @@
     white-space: nowrap;
   }
 
+  h3 .pill { margin-left: 10px; vertical-align: middle; }
+
   .pill.own { background: var(--accent-wash); color: var(--accent); }
   .pill.mixed { background: var(--surface-sunk); color: var(--ink-soft); }
   .pill.deleg { background: var(--surface-sunk); color: var(--ink-faint); }
@@ -363,6 +365,13 @@
   }
 
   .exit ul { padding-left: 18px; gap: 4px; max-width: none; }
+
+  .week-body p.note {
+    font-size: 14px;
+    color: var(--ink-faint);
+    font-family: var(--mono);
+    line-height: 1.55;
+  }
 
   .gate {
     background: var(--accent-wash);
@@ -466,7 +475,7 @@
 <div class="wrap">
 
   <header class="masthead">
-    <p class="eyebrow">Scope Document · v3 · revised 13 Aug 2026</p>
+    <p class="eyebrow">Scope Document · v4 · revised 14 Aug 2026</p>
     <h1>Fantasy Basketball: MVP Scope &amp; 8-Week Plan</h1>
     <p class="standfirst">A single-league head-to-head 9-category fantasy basketball app, live for opening night. Drafting stays on Yahoo; everything after it moves here.</p>
     <div class="meta">
@@ -479,7 +488,7 @@
 
   <section class="col">
     <h2>Status</h2>
-    <p class="lede">Revised 13 August 2026, before week 1 began. Two assumptions in the original plan broke, and two subsystems came in early.</p>
+    <p class="lede">Revised 14 August 2026, before week 1 began. Two assumptions in the original plan broke, two subsystems came in early, and the ownership of both has now been settled.</p>
 
     <div class="callout warn">
       <span class="tag">Assumption broken</span>
@@ -498,7 +507,14 @@
 
     <div class="callout warn">
       <span class="tag">Course correction</span>
-      <p>Both were built by tooling rather than by hand, which defeats the purpose of naming them hand-owned. The scoring engine has been <strong>gutted back to signatures</strong> for reimplementation against its own tests; the reference sits on a stash branch. Standing rule from here: on the three hand-owned subsystems, tooling writes the failing tests and names the edge cases, and the implementation is written by hand.</p>
+      <p>Both were built by tooling rather than by hand, which defeats the purpose of naming them hand-owned. The scoring engine was <strong>gutted back to signatures</strong> and reimplemented against its own tests; the reference on the stash branch went unread. Standing rule from here: on the three hand-owned subsystems, tooling writes the failing tests and names the edge cases, and the implementation is written by hand.</p>
+    </div>
+
+    <div class="callout">
+      <span class="tag">Resolved</span>
+      <p><strong>Lineup locking passed its defence round on 14 August and is retained as written.</strong> Eight design decisions were re-derived without reference to the code — day boundaries, the lock comparison, no-game handling, injured-list eligibility, the two validation passes, and roster configuration. It was not gutted.</p>
+      <p>Three edits came out of the round and two are done, both of them the owner's own contributions rather than corrections: a payload-completeness check that closes the omission route into a locked lineup, and a deliberate reversal of the tie-break at the exact tip-off instant, which now resolves in the manager's favour. The third is deferred with reason, alongside a second question the round surfaced; both are listed under week 0.</p>
+      <p>With the scoring engine rewritten the same day, <strong>two of the three hand-owned subsystems are now settled</strong> and only player identity remains unwritten.</p>
     </div>
 
     <div>
@@ -662,20 +678,26 @@
 
   <section class="col">
     <h2>The three that must be yours</h2>
+    <p class="lede">Ownership is demonstrated, not asserted. Anything built by tooling before this rule existed has to survive a defence round — the decisions re-derived cold, without reading the implementation — or it gets gutted and rewritten by hand. Two rounds have now run.</p>
 
     <div>
-      <h3>Lineup locking</h3>
+      <h3>Lineup locking <span class="pill own">defended · retained</span></h3>
       <p>A slot locks when that player's game tips, not at a daily cutoff. Layer on fantasy-day boundaries and a 10&nbsp;p.m. ET tip-off that is already tomorrow in UTC, and this becomes the subsystem most likely to produce a silent, expensive, mid-season bug. It is also the one worth twenty minutes of interview conversation.</p>
+      <p>Defended 14 Aug across eight decisions and retained. The strongest answers were the ones reasoning about what managers would <em>do</em> with a rule rather than what the rule says: why no-game-means-no-lock protects drops and the waiver clock rather than just streaming, and why admitting a day-to-day <code>Out</code> onto the injured list silently converts three IL slots into three bench slots and quietly reprices rest-prone veterans.</p>
+      <p>The habit to sharpen, visible twice: being precise about what a rule ranges over. "Changed" has to range over the union of both lineups, absence included, or the check inspects exactly the case a cheating manager will not use. Validation ranges over one state in one pass and a pair of states in the other, which is why they cannot merge.</p>
     </div>
 
     <div>
-      <h3>Scoring as pure recompute</h3>
+      <h3>Scoring as pure recompute <span class="pill own">defended · rewritten by hand</span></h3>
       <p>The engine should be a pure function from stored stat lines to a matchup result, callable at any time for any week. Store raw box scores; never store an accumulated total as the source of truth. This is what makes stat corrections, rule changes, and your own bugs recoverable instead of catastrophic.</p>
+      <p>Defended 13 Aug. One real gap: stat corrections were described as a cascade of patches through stat lines, matchup totals and standings, when the point of the design is that nothing downstream is stored as truth, so correcting the line makes everything re-derive. A cache is fine; a cache as source of truth is not. That is why the correction-reconciliation path in week 2 is reserved.</p>
+      <p>Gutted back to signatures and rewritten from scratch on 14 Aug against the red suite, without consulting the stashed reference. It went green — and was still wrong twice, in ways the suite could not see. A percentage comparison handled a null on one side but not the other, because every test checked a single orientation. And the aggregation walked its input eleven times, once per category, which is free against the collection literals in tests and eleven round trips against the query that arrives with persistence. Both were found by writing new tests after the suite was green, which is the durable lesson: a passing suite is evidence about the tests, not about the code.</p>
     </div>
 
     <div>
-      <h3>Player identity</h3>
+      <h3>Player identity <span class="pill own">unwritten</span></h3>
       <p>Rosters are transcribed from a Yahoo draft, so Yahoo's player keys are your join key throughout. Name-matching will fail on suffixes, accents, and two-way call-ups — and it will fail mid-season, when fixing it is expensive.</p>
+      <p>Untouched by design, and the schema is to be written by hand from the start: <code>Player</code> alongside <code>PlayerExternalId (player_id, provider, external_id)</code>, so provider keys are mapped rather than used as primary keys. That indirection is what turns an eventual provider swap into a two-day adapter.</p>
     </div>
 
     <div class="callout">
@@ -701,15 +723,20 @@
               <li>Per-player lineup locking, fantasy-date attribution through the league timezone, position and injured-list eligibility — 27 tests green</li>
               <li>Scoring engine fully specified by 19 tests; matchup results now name both teams rather than implying orientation from argument order</li>
               <li>Yahoo OAuth token lifecycle, built but unverifiable until access is granted</li>
+              <li>Defence rounds run on both early subsystems; lineup locking retained, scoring engine gutted and rewritten by hand</li>
+              <li><b>Scoring engine reimplemented from signatures</b> against its red suite, without reference to the stashed implementation</li>
+              <li><b>Tie-break at tip-off</b> — the comparison is now exclusive, so a save landing on the exact tip-off instant is accepted. Tip-off is only known to the minute, so the boundary is nominal either way; the deliberate position is that ambiguity resolves in the manager's favour</li>
+              <li><b>Payload completeness</b> — a submission describes the whole lineup, so a rostered player given no slot is malformed rather than an edit. Independent of the lock rule, and it refuses the omission route before locking is consulted</li>
             </ul>
           </div>
           <div class="exit">
             <span class="tag">Carried into week 1</span>
             <ul>
-              <li>Scoring engine implementation, to be written by hand against its red suite</li>
-              <li>A defence round for lineup locking, matching the one the scoring engine went through</li>
+              <li><b>Roster configuration totality</b> — a slot missing from the configuration reports capacity zero rather than failing, which is harmless today and a live bug the moment roster shape becomes commissioner-editable. Blocked on configurations being persisted at all: validating one on save needs a save</li>
+              <li><b>Duplicate scheduled games</b> — the lookup takes the first match for a team on a fantasy date. Only reachable through ingestion duplicates or a reschedule sitting alongside the row it replaces, and only harmful when the two disagree on tip-off. Belongs with the week 2 re-poll path, where the cause lives</li>
             </ul>
           </div>
+          <p class="note">Suite stands at 53 green, 0 red. Four tests were added after it first went green, and two of them failed — see the note on the scoring engine below.</p>
         </div>
       </div>
 
@@ -743,12 +770,20 @@
               <li>A corrected stat line updates, and the affected matchup recomputes to the new answer</li>
               <li>A re-poll window catches corrections landing days after a game, and reconciles them</li>
               <li>Player registry sync populates identity and external ID mapping</li>
+              <li>Injury statuses map without collapsing day-to-day absences into long-term ones</li>
+              <li>Tip-off instants survive a daylight saving transition intact</li>
               <li>App reachable at a public URL</li>
             </ul>
           </div>
           <div class="gate">
             <span class="tag">Written by hand</span>
             <p>The correction-reconciliation path is reserved. It is where stored-totals-as-truth and recompute-from-lines actually diverge, and understanding that divergence is the point of owning this subsystem.</p>
+          </div>
+          <div class="callout warn">
+            <span class="tag">Carried from the locking round</span>
+            <p>Two domain rules are only as good as what ingestion feeds them, and both failure modes are silent.</p>
+            <p><strong>Injury status is lossy at the source.</strong> Providers frequently collapse "out tonight" and "out for the season" into a single value. The injured-list rule correctly refuses day-to-day absences, but it refuses them on the basis of a status it did not compute. Confirm what the chosen provider actually distinguishes before trusting it.</p>
+            <p><strong>Deriving instants with a fixed offset moves the lock.</strong> If a provider supplies wall-clock local times and ingestion applies a constant offset, every tip-off is an hour wrong under daylight saving. That does not misfile the fantasy day — the boundary sits far from any real tip-off — it shifts the lock itself, handing managers an hour of editing after their player has started or stealing an hour before it. Convert through the zone, not the offset.</p>
           </div>
         </div>
       </div>
@@ -920,7 +955,7 @@
     <ul>
       <li><strong>Whether Yahoo approves API access, and when.</strong> The one question that cannot be answered by working on it. Resolved by the week 6 gate one way or the other; if it is still open then, the answer is no and the paid alternative is committed to.</li>
       <li><strong>Confirmed 2026–27 season start date</strong>, and whether preseason games appear in whichever stat feed is chosen. Week 7's shadow run assumes both.</li>
-      <li><strong>League size and roster configuration.</strong> The domain currently assumes a conventional ten active, three bench, three injured list. Drives schedule generation and slot validation, so worth settling before week 3.</li>
+      <li><strong>League size and roster configuration.</strong> The domain currently assumes a conventional ten active, three bench, three injured list. Slot counts are held as data rather than fixed fields, so the shape itself is a commissioner setting rather than a code change — but nothing yet validates that a submitted configuration is complete, and an omitted slot currently reports capacity zero instead of failing. Drives schedule generation and slot validation, so worth settling before week 3.</li>
       <li><strong>Yahoo's real access token lifetime.</strong> Published sources disagree between minutes and an hour. The refresh logic handles either, but the value is unmeasurable until access is granted.</li>
       <li><strong>Percentage categories with no attempts.</strong> The engine ranks a team that never shot below one that did, and ties two that both never shot. Unverified against Yahoo's actual behaviour; isolated in one place and only reachable if a team fields nobody for a full period.</li>
       <li><strong>Whether the commissioner is you.</strong> If not, the admin tooling needs to be usable by someone else, which moves it off the cut list.</li>
@@ -928,7 +963,7 @@
   </section>
 
   <footer>
-    Scope document v1 · drafted 13 August 2026 · revise at each gate rather than continuously
+    Scope document v4 · drafted 13 August 2026, revised 14 August · revise at each gate rather than continuously
   </footer>
 
 </div>
