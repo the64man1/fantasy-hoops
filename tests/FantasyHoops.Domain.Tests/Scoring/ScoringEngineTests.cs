@@ -98,6 +98,29 @@ public class ScoringEngineTests
         Assert.Equal(0.0, totals.FieldGoalPercentage!.Value, precision: 10);
     }
 
+    /// <summary>
+    /// Stat lines arrive as a query, not a list, once persistence lands. Enumerating the sequence
+    /// once per category means eleven passes over it — eleven round trips against a deferred
+    /// LINQ query, and outright wrong answers for any sequence that cannot be replayed.
+    /// </summary>
+    [Fact]
+    public void Aggregate_EnumeratesTheSequenceOnlyOnce()
+    {
+        var passes = 0;
+
+        IEnumerable<StatLine> Lines()
+        {
+            passes++;
+            yield return Line(fgm: 2, fga: 4, pts: 10, reb: 3);
+            yield return Line(fgm: 1, fga: 5, pts: 4, reb: 2);
+        }
+
+        var totals = ScoringEngine.Aggregate(Lines());
+
+        Assert.Equal(14, totals.Points);
+        Assert.Equal(1, passes);
+    }
+
     // ---------------------------------------------------------------------
     // Category comparison
     // ---------------------------------------------------------------------
@@ -146,6 +169,38 @@ public class ScoringEngineTests
             B(Totals(fgm: 0, fga: 20)));
 
         Assert.Equal(CategoryOutcome.Loss, result.Categories[StatCategory.FieldGoalPercentage]);
+    }
+
+    /// <summary>
+    /// The mirror of the case above, which is the orientation the original test never checked.
+    /// A team that attempted and missed everything still did something; a team that never attempted
+    /// did not. Whichever way round the arguments arrive, attempts beat no attempts.
+    /// </summary>
+    [Fact]
+    public void Resolve_AnyAttemptsBeatsNoAttempts_WhicheverSideIsAsking()
+    {
+        var result = ScoringEngine.Resolve(
+            A(Totals(fgm: 0, fga: 20)),
+            B(Totals(fgm: 0, fga: 0)));
+
+        Assert.Equal(CategoryOutcome.Win, result.Categories[StatCategory.FieldGoalPercentage]);
+    }
+
+    /// <summary>
+    /// Symmetry specifically across a null-versus-value comparison. The existing symmetry test
+    /// gives both teams attempts, so it cannot detect a comparison that collapses to the same
+    /// answer in both directions.
+    /// </summary>
+    [Fact]
+    public void Resolve_IsSymmetric_WhenOneTeamNeverAttempted()
+    {
+        var attempted = Totals(fgm: 4, fga: 9);
+        var never = Totals(fgm: 0, fga: 0);
+
+        var forward = ScoringEngine.Resolve(A(attempted), B(never));
+        var backward = ScoringEngine.Resolve(B(never), A(attempted));
+
+        Assert.Equal(forward.Invert(), backward);
     }
 
     // ---------------------------------------------------------------------
