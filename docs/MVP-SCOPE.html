@@ -475,7 +475,7 @@
 <div class="wrap">
 
   <header class="masthead">
-    <p class="eyebrow">Scope Document · v4 · revised 14 Aug 2026</p>
+    <p class="eyebrow">Scope Document · v5 · revised 15 Aug 2026</p>
     <h1>Fantasy Basketball: MVP Scope &amp; 8-Week Plan</h1>
     <p class="standfirst">A single-league head-to-head 9-category fantasy basketball app, live for opening night. Drafting stays on Yahoo; everything after it moves here.</p>
     <div class="meta">
@@ -488,7 +488,7 @@
 
   <section class="col">
     <h2>Status</h2>
-    <p class="lede">Revised 14 August 2026, before week 1 began. Two assumptions in the original plan broke, two subsystems came in early, and the ownership of both has now been settled.</p>
+    <p class="lede">Revised 15 August 2026, before week 1 began. Two assumptions in the original plan broke, two subsystems came in early and had their ownership settled, and the third has been designed.</p>
 
     <div class="callout warn">
       <span class="tag">Assumption broken</span>
@@ -514,7 +514,7 @@
       <span class="tag">Resolved</span>
       <p><strong>Lineup locking passed its defence round on 14 August and is retained as written.</strong> Eight design decisions were re-derived without reference to the code — day boundaries, the lock comparison, no-game handling, injured-list eligibility, the two validation passes, and roster configuration. It was not gutted.</p>
       <p>Three edits came out of the round and two are done, both of them the owner's own contributions rather than corrections: a payload-completeness check that closes the omission route into a locked lineup, and a deliberate reversal of the tie-break at the exact tip-off instant, which now resolves in the manager's favour. The third is deferred with reason, alongside a second question the round surfaced; both are listed under week 0.</p>
-      <p>With the scoring engine rewritten the same day, <strong>two of the three hand-owned subsystems are now settled</strong> and only player identity remains unwritten.</p>
+      <p>With the scoring engine rewritten the same day, <strong>two of the three hand-owned subsystems are now settled</strong>. Player identity was designed on 15 Aug and is the last one left to write.</p>
     </div>
 
     <div>
@@ -619,9 +619,9 @@
           </tr>
           <tr>
             <td class="name">Player registry</td>
-            <td>Canonical player records, position eligibility, injury status, team affiliation</td>
-            <td><span class="pill mixed">Mixed</span></td>
-            <td class="risk">Identity drift. Use Yahoo player keys as canonical from day one</td>
+            <td>Canonical player records, external ID mapping, position eligibility, injury status, team affiliation</td>
+            <td><span class="pill own">Own</span></td>
+            <td class="risk">Identity drift. The stat provider's IDs are the join key, mapped alongside rather than used as primary keys</td>
           </tr>
           <tr>
             <td class="name">Stat ingestion</td>
@@ -695,9 +695,22 @@
     </div>
 
     <div>
-      <h3>Player identity <span class="pill own">unwritten</span></h3>
-      <p>Rosters are transcribed from a Yahoo draft, so Yahoo's player keys are your join key throughout. Name-matching will fail on suffixes, accents, and two-way call-ups — and it will fail mid-season, when fixing it is expensive.</p>
-      <p>Untouched by design, and the schema is to be written by hand from the start: <code>Player</code> alongside <code>PlayerExternalId (player_id, provider, external_id)</code>, so provider keys are mapped rather than used as primary keys. That indirection is what turns an eventual provider swap into a two-day adapter.</p>
+      <h3>Player identity <span class="pill own">designed · unwritten</span></h3>
+      <p>This is a join between two vocabularies that do not agree. Stats arrive keyed by a provider's ID; rosters arrive as names a human typed after a Yahoo draft. Neither is the app's own notion of a player, and every other table needs one stable thing to key on. Name-matching fails on suffixes, accents, and two-way call-ups — and it fails mid-season, when fixing it is expensive.</p>
+      <p>The schema is <code>Player</code> alongside <code>PlayerExternalId (player_id, provider, external_id)</code>, so provider keys are mapped rather than used as primary keys. That indirection is what turns an eventual provider swap into a two-day adapter.</p>
+      <p>Designed 15 Aug, unwritten by design. The decisions that fell out, in the order they matter:</p>
+      <ul>
+        <li><strong>The canonical universe comes from whoever supplies the stats</strong>, not whoever supplies the rosters. Box scores arrive keyed by their IDs every night and must resolve exactly; roster binding happens once and can afford a human.</li>
+        <li><strong>Universe sync creates players; roster import only binds them.</strong> If import could create, a typo'd name would mint a duplicate and quietly split a season across two identities.</li>
+        <li><strong>Name matching is quarantined to a single supervised bootstrap.</strong> Exact matches bind, failures surface as work with candidates attached. Fuzzy matching was considered and rejected — the one place guessing is tolerable is the one place a human is already watching.</li>
+        <li><strong>An unmapped ID in a nightly box score is held, not dropped and not fatal.</strong> It lands in a lightweight pending table with an admin flow. A run that dies costs every other player's stats; a log line nobody reads costs one player's, silently.</li>
+        <li><strong>Pending players live in their own table rather than as a flag.</strong> A flag is an invariant every future query has to remember; a separate table makes the mistake unrepresentable.</li>
+        <li><strong>Name and NBA team are attributes, not identity.</strong> A rename is an update. A trade changes a field, not a player.</li>
+      </ul>
+      <div class="callout">
+        <span class="tag">Open · blocks the schema</span>
+        <p>Does a stat line store <code>player_id</code>, or <code>(provider, external_id)</code> joined to the player through the mapping? Only the second makes confirming a held player a single insert. Under the first it is a backfill, because identity would have been resolved at write time.</p>
+      </div>
     </div>
 
     <div class="callout">
@@ -748,8 +761,9 @@
           <div class="exit">
             <span class="tag">Exit criteria</span>
             <ul>
-              <li>Scoring engine reimplemented by hand; the full suite is green again</li>
+              <li>Player identity written by hand: canonical players, external ID mapping, the pending table, and the two lookups kept apart</li>
               <li>EF Core entities and first migration: players, external ID mapping, stat lines, rosters, lineups, games</li>
+              <li>Unique constraints on <code>(provider, external_id)</code> and <code>(player_id, provider)</code> enforced by the database, not the application</li>
               <li>Provider interface defined, with a fixture implementation driving tests offline</li>
               <li>Real payloads recorded from a free tier where available, rather than invented</li>
               <li>CI runs the test suite on every push</li>
@@ -784,6 +798,7 @@
             <p>Two domain rules are only as good as what ingestion feeds them, and both failure modes are silent.</p>
             <p><strong>Injury status is lossy at the source.</strong> Providers frequently collapse "out tonight" and "out for the season" into a single value. The injured-list rule correctly refuses day-to-day absences, but it refuses them on the basis of a status it did not compute. Confirm what the chosen provider actually distinguishes before trusting it.</p>
             <p><strong>Deriving instants with a fixed offset moves the lock.</strong> If a provider supplies wall-clock local times and ingestion applies a constant offset, every tip-off is an hour wrong under daylight saving. That does not misfile the fantasy day — the boundary sits far from any real tip-off — it shifts the lock itself, handing managers an hour of editing after their player has started or stealing an hour before it. Convert through the zone, not the offset.</p>
+            <p><strong>Resolve identity from memory, not per row.</strong> Load the provider-ID mapping into a dictionary once per run rather than querying for each stat line. The cache is scoped to the job and dies with it, so there is no invalidation to get wrong — the same reasoning that says to materialise a sequence before summing it eleven times.</p>
           </div>
         </div>
       </div>
@@ -956,6 +971,7 @@
       <li><strong>Whether Yahoo approves API access, and when.</strong> The one question that cannot be answered by working on it. Resolved by the week 6 gate one way or the other; if it is still open then, the answer is no and the paid alternative is committed to.</li>
       <li><strong>Confirmed 2026–27 season start date</strong>, and whether preseason games appear in whichever stat feed is chosen. Week 7's shadow run assumes both.</li>
       <li><strong>League size and roster configuration.</strong> The domain currently assumes a conventional ten active, three bench, three injured list. Slot counts are held as data rather than fixed fields, so the shape itself is a commissioner setting rather than a code change — but nothing yet validates that a submitted configuration is complete, and an omitted slot currently reports capacity zero instead of failing. Drives schedule generation and slot validation, so worth settling before week 3.</li>
+      <li><strong>What key a stat line carries.</strong> Either the internal player ID, resolved at write time, or the provider pair joined through the mapping. The second makes a held player's backlog resolve on a single insert; the first turns it into a backfill. Blocks the first migration, so it is the next thing to settle.</li>
       <li><strong>Yahoo's real access token lifetime.</strong> Published sources disagree between minutes and an hour. The refresh logic handles either, but the value is unmeasurable until access is granted.</li>
       <li><strong>Percentage categories with no attempts.</strong> The engine ranks a team that never shot below one that did, and ties two that both never shot. Unverified against Yahoo's actual behaviour; isolated in one place and only reachable if a team fields nobody for a full period.</li>
       <li><strong>Whether the commissioner is you.</strong> If not, the admin tooling needs to be usable by someone else, which moves it off the cut list.</li>
@@ -963,7 +979,7 @@
   </section>
 
   <footer>
-    Scope document v4 · drafted 13 August 2026, revised 14 August · revise at each gate rather than continuously
+    Scope document v5 · drafted 13 August 2026, revised 15 August · revise at each gate rather than continuously
   </footer>
 
 </div>
